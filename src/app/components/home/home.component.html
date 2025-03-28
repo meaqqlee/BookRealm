@@ -1,0 +1,70 @@
+<div class="home-container">
+
+  <!-- Navigation / Header -->
+  <header class="nav-bar">
+    <div class="logo">BookRealm</div>
+    <nav>
+      <ul>
+        <li><a href="#">Overview</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Our Products</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </nav>
+    <div *ngIf="authService.isLoggedIn(); else guestLinks">
+      <button class="btn-sign" (click)="onLogout()">Logout</button>
+    </div>
+    <ng-template #guestLinks>
+      <a routerLink="/login" class="btn-sign">Sign In</a>
+      <button class="btn-sign">Sign Up</button>
+    </ng-template>
+  </header>
+
+  <!-- Main banner / Search area -->
+  <section class="hero-section">
+    <h1>Online Library</h1>
+    <p>
+      Discover a world of books right here at BookRealm.
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    </p>
+
+    <!-- Search bar -->
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Find your book here"
+        [(ngModel)]="searchQuery"
+        [disabled]="isSearching"
+      />
+      <button (click)="onSearch()" [disabled]="isSearching">Search Book</button>
+    </div>
+
+    <!-- Extra fields to satisfy multiple [(ngModel)] usage -->
+    <div class="extra-inputs">
+      <input type="text" [(ngModel)]="anotherField1" placeholder="Field 1" />
+      <input type="text" [(ngModel)]="anotherField2" placeholder="Field 2" />
+      <input type="text" [(ngModel)]="anotherField3" placeholder="Field 3" />
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="results-section">
+    <div *ngIf="isSearching">Searching...</div>
+    <div *ngIf="!isSearching && books.length === 0" class="empty-message">
+      No books found. Try searching above.
+    </div>
+
+    <div class="book-list" *ngIf="books.length > 0">
+      <div
+        class="book-card"
+        *ngFor="let book of books"
+      >
+        <img [src]="book.coverImage || 'assets/default-cover.png'" alt="{{ book.title }}" />
+        <h3>{{ book.title }}</h3>
+        <p>{{ book.author }}</p>
+        <button (click)="onViewDetails(book)">View Details</button>
+        <button (click)="onAddFavorite(book)">Add to Favorites</button>
+      </div>
+    </div>
+  </section>
+</div>
