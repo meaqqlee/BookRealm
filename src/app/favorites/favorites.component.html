@@ -1,0 +1,42 @@
+<div class="favorites-container">
+  <h1>Your Favorite Books</h1>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your favorites...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && favoriteBooks.length === 0">
+    <div class="empty-icon">📚</div>
+    <h2>No favorites yet</h2>
+    <p>Books you add to favorites will appear here.</p>
+    <button class="browse-btn" (click)="router.navigate(['/'])">Browse Books</button>
+  </div>
+
+  <div class="favorites-grid" *ngIf="!isLoading && favoriteBooks.length > 0">
+    <div
+      class="book-card"
+      *ngFor="let book of favoriteBooks"
+      (click)="viewBookDetails(book.id)"
+    >
+      <div class="book-cover">
+        <img [src]="book.coverImage || 'assets/default-book-cover.jpg'" [alt]="book.title">
+        <button
+          class="remove-button"
+          (click)="removeFromFavorites(book, $event)"
+          title="Remove from favorites"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="book-info">
+        <h3>{{ book.title }}</h3>
+        <p class="author">By {{ book.author }}</p>
+        <p class="publisher" *ngIf="book.publisher">{{ book.publisher }}</p>
+        <p class="added-date">Added on {{ book.dateAdded | date:'mediumDate' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

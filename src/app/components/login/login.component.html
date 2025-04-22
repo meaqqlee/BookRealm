@@ -1,1 +1,61 @@
-<p>login works!</p>
+<div class="login-container">
+  <h2>{{ isRegisterMode ? 'Register' : 'Login' }} to BookRealm</h2>
+
+  <form (ngSubmit)="isRegisterMode ? onRegister() : onLogin()">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        [(ngModel)]="user.username"
+        required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        [(ngModel)]="user.password"
+        required>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="button-group">
+      <button
+        *ngIf="!isRegisterMode"
+        type="submit"
+        [disabled]="isLoading">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+      </button>
+
+      <button
+        *ngIf="isRegisterMode"
+        type="submit"
+        [disabled]="isLoading">
+        {{ isLoading ? 'Registering...' : 'Register' }}
+      </button>
+
+      <button
+        type="button"
+        (click)="toggleMode()"
+        [disabled]="isLoading">
+        {{ isRegisterMode ? 'Switch to Login' : 'Switch to Register' }}
+      </button>
+    </div>
+  </form>
+
+  <div class="info-text">
+    <p>
+      {{ isRegisterMode ? 'Already have an account?' : 'Don\'t have an account?' }}
+      <a href="javascript:void(0)" (click)="toggleMode()">
+        {{ isRegisterMode ? 'Login' : 'Register now' }}
+      </a>
+    </p>
+  </div>
+</div>

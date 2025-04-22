@@ -1,60 +1,95 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http'; 
-
+import { Router } from '@angular/router';
 import { BooksService } from '../../services/books.service';
-import { AuthService } from '../../services/auth.service';
 import { Book } from '../../interfaces/book.model';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
   selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.components.scss']
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
   searchQuery: string = '';
-  books: Book[] = [];
-  isSearching: boolean = false;
+  advancedAuthor: string = '';
+  advancedYear: string = '';
+  advancedPublisher: string = '';
 
-  // Additional fields for demonstrating multiple [(ngModel)]
-  anotherField1: string = '';
-  anotherField2: string = '';
-  anotherField3: string = '';
+  books: Book[] = [];
+  featuredBooks: Book[] = [];
+  isLoading: boolean = false;
+  showAdvancedSearch: boolean = false;
 
   constructor(
     private booksService: BooksService,
-    public authService: AuthService
+    private router: Router
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadFeaturedBooks();
+  }
 
-  onSearch(): void {
-    if (!this.searchQuery.trim()) return;
-    this.isSearching = true;
-    this.booksService.searchBooks(this.searchQuery).subscribe({
-      next: (res: Book[]) => {
-        this.isSearching = false;
-        this.books = res;
+  loadFeaturedBooks(): void {
+    this.isLoading = true;
+    this.booksService.getFeaturedBooks().subscribe({
+      next: (books) => {
+        this.featuredBooks = books;
+        this.isLoading = false;
       },
-      error: (err: any) => {
-        this.isSearching = false;
-        console.error(err);
+      error: (error) => {
+        console.error('Error loading featured books:', error);
+        this.isLoading = false;
       }
     });
   }
 
-  onLogout(): void {
-    this.authService.logout();
+  onSearch(): void {
+    if (!this.searchQuery.trim() &&
+      !this.advancedAuthor.trim() &&
+      !this.advancedYear.trim() &&
+      !this.advancedPublisher.trim()) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.booksService.searchBooks(
+      this.searchQuery,
+      this.advancedAuthor,
+      this.advancedYear,
+      this.advancedPublisher
+    ).subscribe({
+      next: (books) => {
+        this.books = books;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error searching books:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
-  onAddFavorite(book: Book): void {
-    // Future: call a Django endpoint like POST /api/favorites
+  toggleAdvancedSearch(): void {
+    this.showAdvancedSearch = !this.showAdvancedSearch;
   }
 
-  onViewDetails(book: Book): void {
-    // Future: router.navigate(['/book', book.id]), or show a modal
+  viewBookDetails(bookId: string): void {
+    this.router.navigate(['/book', bookId]);
+  }
+
+  addToFavorites(book: Book, event: Event): void {
+    event.stopPropagation();
+    this.booksService.addToFavorites(book.id).subscribe({
+      next: () => {
+        // Show a success indication
+        book.isFavorite = true;
+      },
+      error: (error) => {
+        console.error('Error adding book to favorites:', error);
+      }
+    });
   }
 }

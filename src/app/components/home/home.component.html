@@ -1,70 +1,132 @@
 <div class="home-container">
-
-  <!-- Navigation / Header -->
-  <header class="nav-bar">
-    <div class="logo">BookRealm</div>
-    <nav>
-      <ul>
-        <li><a href="#">Overview</a></li>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Our Products</a></li>
-        <li><a href="#">Contact Us</a></li>
-      </ul>
-    </nav>
-    <div *ngIf="authService.isLoggedIn(); else guestLinks">
-      <button class="btn-sign" (click)="onLogout()">Logout</button>
-    </div>
-    <ng-template #guestLinks>
-      <a routerLink="/login" class="btn-sign">Sign In</a>
-      <button class="btn-sign">Sign Up</button>
-    </ng-template>
-  </header>
-
-  <!-- Main banner / Search area -->
+  <!-- Hero Section -->
   <section class="hero-section">
-    <h1>Online Library</h1>
+    <h1>Discover Your Next Favorite Book</h1>
     <p>
-      Discover a world of books right here at BookRealm.
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      Browse through thousands of books from various genres and authors.
+      Find the perfect read for any mood or occasion.
     </p>
 
     <!-- Search bar -->
-    <div class="search-bar">
-      <input
-        type="text"
-        placeholder="Find your book here"
-        [(ngModel)]="searchQuery"
-        [disabled]="isSearching"
-      />
-      <button (click)="onSearch()" [disabled]="isSearching">Search Book</button>
-    </div>
+    <div class="search-section">
+      <div class="search-bar">
+        <input
+          type="text"
+          placeholder="Search by title, author, or keyword"
+          [(ngModel)]="searchQuery"
+          [disabled]="isLoading"
+        />
+        <button (click)="onSearch()" [disabled]="isLoading">
+          {{ isLoading ? 'Searching...' : 'Search' }}
+        </button>
+      </div>
 
-    <!-- Extra fields to satisfy multiple [(ngModel)] usage -->
-    <div class="extra-inputs">
-      <input type="text" [(ngModel)]="anotherField1" placeholder="Field 1" />
-      <input type="text" [(ngModel)]="anotherField2" placeholder="Field 2" />
-      <input type="text" [(ngModel)]="anotherField3" placeholder="Field 3" />
-    </div>
-  </section>
+      <div class="advanced-search-toggle">
+        <a href="javascript:void(0)" (click)="toggleAdvancedSearch()">
+          {{ showAdvancedSearch ? 'Hide Advanced Search' : 'Advanced Search' }}
+        </a>
+      </div>
 
-  <!-- Results -->
-  <section class="results-section">
-    <div *ngIf="isSearching">Searching...</div>
-    <div *ngIf="!isSearching && books.length === 0" class="empty-message">
-      No books found. Try searching above.
-    </div>
+      <!-- Advanced search options -->
+      <div class="advanced-search" *ngIf="showAdvancedSearch">
+        <div class="advanced-row">
+          <div class="advanced-field">
+            <label for="author">Author</label>
+            <input
+              type="text"
+              id="author"
+              placeholder="Author name"
+              [(ngModel)]="advancedAuthor"
+            />
+          </div>
 
-    <div class="book-list" *ngIf="books.length > 0">
-      <div
-        class="book-card"
-        *ngFor="let book of books"
-      >
-        <img [src]="book.coverImage || 'assets/default-cover.png'" alt="{{ book.title }}" />
-        <h3>{{ book.title }}</h3>
-        <p>{{ book.author }}</p>
-        <button (click)="onViewDetails(book)">View Details</button>
-        <button (click)="onAddFavorite(book)">Add to Favorites</button>
+          <div class="advanced-field">
+            <label for="year">Publication Year</label>
+            <input
+              type="text"
+              id="year"
+              placeholder="e.g. 2020"
+              [(ngModel)]="advancedYear"
+            />
+          </div>
+
+          <div class="advanced-field">
+            <label for="publisher">Publisher</label>
+            <input
+              type="text"
+              id="publisher"
+              placeholder="Publisher name"
+              [(ngModel)]="advancedPublisher"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </section>
+
+  <!-- Search Results Section -->
+  <section class="results-section" *ngIf="books.length > 0">
+    <h2>Search Results</h2>
+    <div class="book-grid">
+      <div
+        class="book-card"
+        *ngFor="let book of books"
+        (click)="viewBookDetails(book.id)"
+      >
+        <div class="book-cover">
+          <img [src]="book.coverImage || 'assets/default-book-cover.jpg'" [alt]="book.title">
+          <button
+            class="favorite-button"
+            [class.favorite]="book.isFavorite"
+            (click)="addToFavorites(book, $event)"
+          >
+            ♥
+          </button>
+        </div>
+        <div class="book-info">
+          <h3>{{ book.title }}</h3>
+          <p class="author">{{ book.author }}</p>
+          <p class="publisher" *ngIf="book.publisher">{{ book.publisher }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Books Section -->
+  <section class="featured-section" *ngIf="!books.length && featuredBooks.length">
+    <h2>Featured Books</h2>
+    <div class="book-grid">
+      <div
+        class="book-card"
+        *ngFor="let book of featuredBooks"
+        (click)="viewBookDetails(book.id)"
+      >
+        <div class="book-cover">
+          <img [src]="book.coverImage || 'assets/default-book-cover.jpg'" [alt]="book.title">
+          <button
+            class="favorite-button"
+            [class.favorite]="book.isFavorite"
+            (click)="addToFavorites(book, $event)"
+          >
+            ♥
+          </button>
+        </div>
+        <div class="book-info">
+          <h3>{{ book.title }}</h3>
+          <p class="author">{{ book.author }}</p>
+          <p class="publisher" *ngIf="book.publisher">{{ book.publisher }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading & Empty State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Loading books...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && books.length === 0 && !featuredBooks.length">
+    <p>No books found. Try adjusting your search criteria.</p>
+  </div>
 </div>
