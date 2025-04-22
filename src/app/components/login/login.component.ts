@@ -18,8 +18,10 @@ export class LoginComponent {
 
   user = {
     username: '',
+    email: '',
     password: ''
   };
+
 
   constructor(
     private authService: AuthService,
@@ -63,7 +65,7 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.register(this.user.username, this.user.password)
+    this.authService.register(this.user.username, this.user.email || this.user.username, this.user.password)
       .subscribe({
         next: () => {
           this.isLoading = false;

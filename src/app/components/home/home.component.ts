@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BooksService } from '../../services/books.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { Book } from '../../interfaces/book.model';
 
 @Component({
@@ -25,6 +26,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private booksService: BooksService,
+    private favoritesService: FavoritesService,
     private router: Router
   ) {}
 
@@ -58,7 +60,7 @@ export class HomeComponent implements OnInit {
     this.booksService.searchBooks(
       this.searchQuery,
       this.advancedAuthor,
-      this.advancedYear,
+      this.advancedYear ? Number(this.advancedYear) : undefined,
       this.advancedPublisher
     ).subscribe({
       next: (books) => {
@@ -82,7 +84,10 @@ export class HomeComponent implements OnInit {
 
   addToFavorites(book: Book, event: Event): void {
     event.stopPropagation();
-    this.booksService.addToFavorites(book.id).subscribe({
+    // Convert book.id to number to ensure type compatibility
+    const bookId = typeof book.id === 'string' ? Number(book.id) : book.id;
+
+    this.favoritesService.addToFavorites(bookId).subscribe({
       next: () => {
         // Show a success indication
         book.isFavorite = true;

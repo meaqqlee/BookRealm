@@ -1,94 +1,167 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { UserProfile } from '../interfaces/user.model';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8000/api'; // Django backend URL
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly USER_KEY = 'user_data';
+  private apiUrl = 'http://localhost:8000/api';
+  private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
+  private tokenExpirationTimer: any;
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {}
+  constructor(private http: HttpClient, private router: Router) {
+    this.loadStoredUser();
+  }
+
+  private loadStoredUser() {
+    const userData = localStorage.getItem('userData');
+    const token = localStorage.getItem('token');
+    if (userData && token) {
+      const user: UserProfile = JSON.parse(userData);
+      this.currentUserSubject.next(user);
+    }
+  }
+
+  get isLoggedIn(): boolean {
+    return !!this.currentUserSubject.value;
+  }
+
+  get currentUser(): UserProfile | null {
+    return this.currentUserSubject.value;
+  }
+
+  get token(): string | null {
+    return localStorage.getItem('token');
+  }
 
   login(username: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.API_URL}/auth/login/`, { username, password })
+    return this.http.post<any>(`${this.apiUrl}/auth/login/`, { username, password })
       .pipe(
         tap(response => {
-          if (response && response.token) {
-            this.setToken(response.token);
-            if (response.user) {
-              localStorage.setItem(this.USER_KEY, JSON.stringify(response.user));
-            }
-          }
+          this.handleAuthentication(
+            response.user.id,
+            response.user.username,
+            response.user.email,
+            response.access,
+            response.refresh
+          );
         }),
         catchError(error => {
-          console.error('Login error', error);
-          return throwError(() => error);
+          let errorMessage = 'An error occurred during login';
+          if (error.error && error.error.detail) {
+            errorMessage = error.error.detail;
+          }
+          return throwError(() => new Error(errorMessage));
         })
       );
   }
 
-  register(username: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.API_URL}/auth/register/`, { username, password })
-      .pipe(
-        tap(response => {
-          if (response && response.token) {
-            this.setToken(response.token);
-            if (response.user) {
-              localStorage.setItem(this.USER_KEY, JSON.stringify(response.user));
-            }
-          }
-        }),
-        catchError(error => {
-          console.error('Registration error', error);
-          return throwError(() => error);
-        })
-      );
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/register/`, {
+      username,
+      email,
+      password,
+      password_confirm: password
+    }).pipe(
+      tap(response => {
+        this.handleAuthentication(
+          response.user.id,
+          response.user.username,
+          response.user.email,
+          response.access,
+          response.refresh
+        );
+      }),
+      catchError(error => {
+        let errorMessage = 'An error occurred during registration';
+        if (error.error) {
+          errorMessage = Object.values(error.error).flat().join(', ');
+        }
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  refreshToken(): Observable<any> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/auth/refresh/`, {
+      refresh: refreshToken
+    }).pipe(
+      tap(response => {
+        localStorage.setItem('token', response.access);
+        // Update token expiration
+        this.autoLogout(3600 * 1000); // 1 hour
+      }),
+      catchError(error => {
+        this.logout();
+        return throwError(() => new Error('Session expired. Please login again.'));
+      })
+    );
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem('userData');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    this.currentUserSubject.next(null);
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer);
+      this.tokenExpirationTimer = null;
+    }
     this.router.navigate(['/login']);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+  private handleAuthentication(
+    id: number,
+    username: string,
+    email: string,
+    token: string,
+    refreshToken: string,
+    joinDate?: string
+  ): void {
+    const user: UserProfile = {
+      id,
+      username,
+      email,
+      joinDate: joinDate ? new Date(joinDate) : new Date() // Convert string to Date object
+    };
+
+    this.currentUserSubject.next(user);
+    localStorage.setItem('userData', JSON.stringify(user));
+    localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refreshToken);
+
+    // Set auto logout timer
+    this.autoLogout(3600 * 1000); // 1 hour
   }
 
-  setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+  private autoLogout(expirationDuration: number): void {
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer);
+    }
+
+    this.tokenExpirationTimer = setTimeout(() => {
+      this.refreshToken().subscribe({
+        error: () => this.logout()
+      });
+    }, expirationDuration);
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
+  getUserProfile(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/users/profile/`);
   }
 
-  getUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.API_URL}/users/profile/`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching user profile', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {
-    return this.http.patch<UserProfile>(`${this.API_URL}/users/profile/`, profile)
-      .pipe(
-        catchError(error => {
-          console.error('Error updating user profile', error);
-          return throwError(() => error);
-        })
-      );
+  updateUserProfile(profileData: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/users/profile/`, profileData);
   }
 }

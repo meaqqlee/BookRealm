@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import {BooksService} from '../services/books.service';
-import {AuthService} from '../services/auth.service';
-import {Book} from '../interfaces/book.model';
+import { BooksService } from '../services/books.service';
+import { AuthService } from '../services/auth.service';
+import { Book } from '../interfaces/book.model';
+import { FavoritesService } from '../services/favorites.service';
 
 @Component({
   selector: 'app-book-details',
@@ -22,6 +23,7 @@ export class BookDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private booksService: BooksService,
+    private favoritesService: FavoritesService,
     public authService: AuthService
   ) {}
 
@@ -39,7 +41,7 @@ export class BookDetailsComponent implements OnInit {
 
   loadBookDetails(bookId: string): void {
     this.isLoading = true;
-    this.booksService.getBookDetails(bookId).subscribe({
+    this.booksService.getBookDetails(Number(bookId)).subscribe({
       next: (book) => {
         this.book = book;
         this.isLoading = false;
@@ -54,11 +56,11 @@ export class BookDetailsComponent implements OnInit {
   }
 
   checkIfFavorite(bookId: string): void {
-    if (!this.authService.isLoggedIn()) return;
+    if (!this.authService.isLoggedIn) return;
 
-    this.booksService.checkFavoriteStatus(bookId).subscribe({
-      next: (status) => {
-        this.isFavorite = status.isFavorite;
+    this.favoritesService.isFavorite(Number(bookId)).subscribe({
+      next: (isFav) => {
+        this.isFavorite = isFav;
       },
       error: (error) => {
         console.error('Error checking favorite status:', error);
@@ -67,15 +69,18 @@ export class BookDetailsComponent implements OnInit {
   }
 
   toggleFavorite(): void {
-    if (!this.authService.isLoggedIn()) {
+    if (!this.authService.isLoggedIn) {
       this.router.navigate(['/login']);
       return;
     }
 
     if (!this.book) return;
 
+    // Convert book.id to number to match the expected parameter type
+    const bookId = typeof this.book.id === 'string' ? Number(this.book.id) : this.book.id;
+
     if (this.isFavorite) {
-      this.booksService.removeFromFavorites(this.book.id).subscribe({
+      this.favoritesService.removeFromFavorites(bookId).subscribe({
         next: () => {
           this.isFavorite = false;
         },
@@ -84,7 +89,7 @@ export class BookDetailsComponent implements OnInit {
         }
       });
     } else {
-      this.booksService.addToFavorites(this.book.id).subscribe({
+      this.favoritesService.addToFavorites(bookId).subscribe({
         next: () => {
           this.isFavorite = true;
         },

@@ -15,12 +15,12 @@ import {AuthService} from '../services/auth.service';
       <nav>
         <ul>
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
-          <li *ngIf="authService.isLoggedIn()"><a routerLink="/favorites" routerLinkActive="active">My Favorites</a></li>
-          <li *ngIf="authService.isLoggedIn()"><a routerLink="/profile" routerLinkActive="active">Profile</a></li>
+          <li *ngIf="authService.isLoggedIn"><a routerLink="/favorites" routerLinkActive="active">My Favorites</a></li>
+          <li *ngIf="authService.isLoggedIn"><a routerLink="/profile" routerLinkActive="active">Profile</a></li>
         </ul>
       </nav>
       <div class="auth-buttons">
-        <ng-container *ngIf="authService.isLoggedIn(); else loggedOut">
+        <ng-container *ngIf="authService.isLoggedIn; else loggedOut">
           <button class="btn btn-logout" (click)="onLogout()">Logout</button>
         </ng-container>
         <ng-template #loggedOut>

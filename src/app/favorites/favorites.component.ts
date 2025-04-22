@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import {BooksService} from '../services/books.service';
-import {Book} from '../interfaces/book.model';
+import { BooksService } from '../services/books.service';
+import { FavoritesService } from '../services/favorites.service';
+import { Book } from '../interfaces/book.model';
 
 @Component({
   selector: 'app-favorites',
@@ -18,6 +19,7 @@ export class FavoritesComponent implements OnInit {
 
   constructor(
     private booksService: BooksService,
+    private favoritesService: FavoritesService,
     protected router: Router
   ) {}
 
@@ -27,9 +29,9 @@ export class FavoritesComponent implements OnInit {
 
   loadFavorites(): void {
     this.isLoading = true;
-    this.booksService.getFavoriteBooks().subscribe({
-      next: (books) => {
-        this.favoriteBooks = books;
+    this.favoritesService.getFavorites().subscribe({
+      next: (favorites) => {
+        this.favoriteBooks = favorites.map(favorite => favorite.book);
         this.isLoading = false;
       },
       error: (error) => {
@@ -47,7 +49,7 @@ export class FavoritesComponent implements OnInit {
   removeFromFavorites(book: Book, event: Event): void {
     event.stopPropagation();
 
-    this.booksService.removeFromFavorites(book.id).subscribe({
+    this.favoritesService.removeFromFavorites(Number(book.id)).subscribe({
       next: () => {
         this.favoriteBooks = this.favoriteBooks.filter(b => b.id !== book.id);
       },
