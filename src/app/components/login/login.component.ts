@@ -1,15 +1,4 @@
 import { Component } from '@angular/core';
-<<<<<<< HEAD
-
-@Component({
-  selector: 'app-login',
-  imports: [],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
-})
-export class LoginComponent {
-
-=======
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -89,5 +78,4 @@ export class LoginComponent {
         }
       });
   }
->>>>>>> b9a19e3 (done backend)
 }

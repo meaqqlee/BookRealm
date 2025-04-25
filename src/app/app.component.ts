@@ -1,13 +1,5 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-<<<<<<< HEAD
-
-@Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
-=======
 import {NavbarComponent} from './navbar/navbar.component';
 
 @Component({
@@ -27,7 +19,6 @@ import {NavbarComponent} from './navbar/navbar.component';
       padding: 20px;
     }
   `]
->>>>>>> b9a19e3 (done backend)
 })
 export class AppComponent {
   title = 'BookRealm';
