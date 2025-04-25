@@ -5,5 +5,4 @@ import { LoginComponent } from './components/login/login.component';
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
-  // Future expansions: { path: 'book/:id', ... }, etc.
 ];

@@ -1,10 +1,16 @@
 export interface Book {
-  id: string;
+  id: number;
   title: string;
   author: string;
-  publisher?: string;
-  publicationDate?: string;
   description?: string;
   coverImage?: string;
-  // additional fields as needed
+  ebookUrl?: string; 
+  purchaseUrl?: string; 
+  publisher?: string;
+  publishYear?: number;
+  isbn?: string;
+  genre?: string[];
+  pageCount?: number;
+  isFavorite?: boolean;
+  dateAdded?: Date;
 }

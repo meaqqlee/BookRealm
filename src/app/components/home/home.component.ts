@@ -1,60 +1,108 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http'; 
+import { CommonModule }       from '@angular/common';
+import { FormsModule }        from '@angular/forms';
+import { RouterModule, Router } from '@angular/router';
+import { forkJoin }           from 'rxjs';
 
-import { BooksService } from '../../services/books.service';
-import { AuthService } from '../../services/auth.service';
-import { Book } from '../../interfaces/book.model';
+import { BooksService }       from '../../services/books.service';
+import { FavoritesService, Favorite } from '../../services/favorites.service';
+import { Book }               from '../../interfaces/book.model';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
   selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.components.scss']
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  searchQuery: string = '';
-  books: Book[] = [];
-  isSearching: boolean = false;
-
-  // Additional fields for demonstrating multiple [(ngModel)]
-  anotherField1: string = '';
-  anotherField2: string = '';
-  anotherField3: string = '';
+  searchQuery      = '';
+  advancedAuthor   = '';
+  advancedYear     = '';
+  advancedPublisher= '';
+  books: Book[]         = [];
+  featuredBooks: Book[] = [];
+  isLoading = false;
+  showAdvancedSearch = false;
 
   constructor(
     private booksService: BooksService,
-    public authService: AuthService
+    private favoritesService: FavoritesService,
+    private router: Router
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadFeaturedWithFavorites();
+  }
 
-  onSearch(): void {
-    if (!this.searchQuery.trim()) return;
-    this.isSearching = true;
-    this.booksService.searchBooks(this.searchQuery).subscribe({
-      next: (res: Book[]) => {
-        this.isSearching = false;
-        this.books = res;
+  private loadFeaturedWithFavorites(): void {
+    this.isLoading = true;
+    forkJoin({
+      featured: this.booksService.getFeaturedBooks(),
+      favs:     this.favoritesService.getFavorites()
+    }).subscribe({
+      next: ({ featured, favs }) => {
+        const favIds = new Set<number>(favs.map((f: Favorite) => f.book.id));
+        this.featuredBooks = featured.map(b => ({
+          ...b,
+          isFavorite: favIds.has(b.id)
+        }));
+        this.isLoading = false;
       },
-      error: (err: any) => {
-        this.isSearching = false;
-        console.error(err);
+      error: err => {
+        console.error('Error loading featured books:', err);
+        this.isLoading = false;
       }
     });
   }
 
-  onLogout(): void {
-    this.authService.logout();
+  onSearch(): void {
+    if (
+      !this.searchQuery.trim() &&
+      !this.advancedAuthor.trim() &&
+      !this.advancedYear.trim() &&
+      !this.advancedPublisher.trim()
+    ) return;
+
+    this.isLoading = true;
+    forkJoin({
+      books: this.booksService.searchBooks(
+        this.searchQuery,
+        this.advancedAuthor,
+        this.advancedYear ? Number(this.advancedYear) : undefined,
+        this.advancedPublisher
+      ),
+      favs: this.favoritesService.getFavorites()
+    }).subscribe({
+      next: ({ books, favs }) => {
+        const favIds = new Set<number>(favs.map((f: Favorite) => f.book.id));
+        this.books = books.map(b => ({
+          ...b,
+          isFavorite: favIds.has(b.id)
+        }));
+        this.isLoading = false;
+      },
+      error: err => {
+        console.error('Error searching books:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
-  onAddFavorite(book: Book): void {
-    // Future: call a Django endpoint like POST /api/favorites
+  toggleAdvancedSearch(): void {
+    this.showAdvancedSearch = !this.showAdvancedSearch;
   }
 
-  onViewDetails(book: Book): void {
-    // Future: router.navigate(['/book', book.id]), or show a modal
+  viewBookDetails(bookId: number | string): void {
+    this.router.navigate(['/book', bookId]);
+  }
+
+  addToFavorites(book: Book, event: Event): void {
+    event.stopPropagation();
+    const id = typeof book.id === 'string' ? Number(book.id) : book.id;
+    this.favoritesService.addToFavorites(id).subscribe({
+      next: () => (book.isFavorite = true),
+      error: (err: any) => console.error('Error adding favorite:', err)
+    });
   }
 }

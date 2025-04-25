@@ -1,5 +1,9 @@
-export interface User {
+export interface UserProfile {
+  id?: number;
   username: string;
-  password: string;
-  token?: string;
+  displayName?: string;
+  email?: string;
+  bio?: string;
+  avatarUrl?: string;
+  joinDate?: string;
 }
