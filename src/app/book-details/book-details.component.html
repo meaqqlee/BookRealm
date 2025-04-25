@@ -1,0 +1,67 @@
+<div class="container">
+  <!-- back button -->
+  <div class="back-button" (click)="goBack()">
+    ← Back to Search
+  </div>
+
+  <!-- loading state -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- error / not found -->
+  <div class="error" *ngIf="!isLoading && !book">
+    Sorry, book not found.
+  </div>
+
+  <!-- book details -->
+  <div class="details" *ngIf="!isLoading && book">
+    <!-- обложка -->
+    <img
+      class="cover"
+      [src]="book.coverImage || 'assets/default-book-cover.jpg'"
+      [alt]="book.title"
+    />
+
+    <!-- основная инфо -->
+    <div class="info">
+      <h1>{{ book.title }}</h1>
+      <p class="meta">
+        <span class="author">{{ book.author }}</span>
+        <span class="year" *ngIf="book.publishYear">({{ book.publishYear }})</span>
+      </p>
+
+      <p class="description" *ngIf="book.description">
+        {{ book.description }}
+      </p>
+
+      <!-- ссылки на eBook и магазин -->
+      <div class="links">
+        <a
+          *ngIf="book.ebookUrl"
+          [href]="book.ebookUrl"
+          target="_blank"
+          rel="noopener"
+        >
+          📖 Read eBook
+        </a>
+        <a
+          *ngIf="book.purchaseUrl"
+          [href]="book.purchaseUrl"
+          target="_blank"
+          rel="noopener"
+        >
+          🛒 Buy Now
+        </a>
+      </div>
+
+      <button
+        class="fav-toggle"
+        [class.favorited]="isFavorite"
+        (click)="toggleFavorite()"
+      >
+        {{ isFavorite ? '♥ In Favorites' : '♡ Add to Favorites' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,105 @@
+.login-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: #D14A16;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #BA8472;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+button {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+button[type="submit"] {
+  background-color: #D14A16;
+  color: white;
+}
+
+button[type="submit"]:hover {
+  background-color: #b83e10;
+}
+
+button[type="button"] {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+button[type="button"]:hover {
+  background-color: #e0e0e0;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #FF5449;
+  font-size: 14px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background-color: #FEE6E5;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.info-text {
+  text-align: center;
+  margin-top: 25px;
+  color: #666;
+}
+
+.info-text a {
+  color: #D14A16;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.info-text a:hover {
+  text-decoration: underline;
+}

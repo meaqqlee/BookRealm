@@ -1,0 +1,95 @@
+<div class="profile-container">
+  <h1>Your Profile</h1>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your profile...</p>
+  </div>
+
+  <div class="profile-content" *ngIf="!isLoading && profile">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <img [src]="profile.avatarUrl || 'assets/default-avatar.png'" alt="Profile avatar">
+      </div>
+      <div class="profile-title">
+        <h2>{{ profile.username }}</h2>
+        <p class="join-date">Member since {{ profile.joinDate | date:'mediumDate' }}</p>
+      </div>
+    </div>
+
+    <div class="profile-details" *ngIf="!isEditing">
+      <div class="detail-row">
+        <span class="label">Display Name</span>
+        <span class="value">{{ profile.displayName || 'Not set' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Email</span>
+        <span class="value">{{ profile.email || 'Not set' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">About Me</span>
+        <span class="value bio">{{ profile.bio || 'No bio information provided.' }}</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn-edit" (click)="enableEditing()">Edit Profile</button>
+      </div>
+    </div>
+
+    <form class="profile-form" *ngIf="isEditing" (ngSubmit)="saveProfile()">
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input
+          type="text"
+          id="displayName"
+          name="displayName"
+          [(ngModel)]="displayName"
+          [disabled]="isLoading"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          [disabled]="isLoading"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="bio">About Me</label>
+        <textarea
+          id="bio"
+          name="bio"
+          rows="4"
+          [(ngModel)]="bio"
+          [disabled]="isLoading"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancelEditing()"
+          [disabled]="isLoading"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-save"
+          [disabled]="isLoading"
+        >
+          {{ isLoading ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
